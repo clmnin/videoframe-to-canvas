@@ -4,6 +4,7 @@ import { MP4Demuxer } from "./mp4_demuxer";
 
 // Status UI. Messages are batched per animation frame.
 let pendingStatus: Record<string, string> | null = null;
+let fpsDisplay: HTMLElement | null = null;
 
 function setStatus(type: string, message: string) {
   if (pendingStatus) {
@@ -16,7 +17,19 @@ function setStatus(type: string, message: string) {
 
 function statusAnimationFrame() {
   console.log(pendingStatus);
+  if (pendingStatus && pendingStatus["render"]) {
+    updateFPSDisplay(pendingStatus["render"]);
+  }
   pendingStatus = null;
+}
+
+function updateFPSDisplay(fpsMessage: string) {
+  if (!fpsDisplay) {
+    fpsDisplay = document.getElementById("fpsDisplay");
+  }
+  if (fpsDisplay) {
+    fpsDisplay.textContent = fpsMessage;
+  }
 }
 
 // Rendering. Drawing is limited to once per animation frame.

@@ -6,12 +6,24 @@
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Render VideoFrame to Canvas</title>
+  <style>
+    #fpsDisplay {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: rgba(0, 0, 0, 0.5);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-family: Arial, sans-serif;
+    }
+  </style>
 </head>
 
 <body>
   <div id="app">
-    <canvas id="fabricCanvas"></canvas>
-    <canvas id="domCanvas"></canvas>
+    <canvas id="videoCanvas"></canvas>
+    <div id="fpsDisplay"></div>
   </div>
   <script type="module" src="/src/main.ts"></script>
 </body>
