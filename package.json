@@ -1,0 +1,20 @@
+{
+  "name": "videoframe-to-canvas",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@types/fabric": "^5.3.9",
+    "typescript": "^5.5.3",
+    "vite": "^5.4.1"
+  },
+  "dependencies": {
+    "fabric": "5.4.0",
+    "mp4box": "^0.5.2"
+  }
+}
