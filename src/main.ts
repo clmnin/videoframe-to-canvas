@@ -32,33 +32,34 @@ function updateFPSDisplay(fpsMessage: string) {
   }
 }
 
-// Rendering. Drawing is limited to once per animation frame.
+// Rendering
 let renderer: FabricRenderer | Canvas2DRenderer | null = null;
-let pendingFrame: VideoFrame | null = null;
+let pendingFrames: [VideoFrame | null, VideoFrame | null] = [null, null];
 let startTime: number | null = null;
 let frameCount = 0;
 
-function renderFrame(frame: VideoFrame) {
-  if (!pendingFrame) {
+function renderFrame(frame: VideoFrame, index: number) {
+  if (!pendingFrames[index]) {
     // Schedule rendering in the next animation frame.
     requestAnimationFrame(renderAnimationFrame);
   } else {
     // Close the current pending frame before replacing it.
-    pendingFrame.close();
+    pendingFrames[index]?.close();
   }
   // Set or replace the pending frame.
-  pendingFrame = frame;
+  pendingFrames[index] = frame;
 }
 
 function renderAnimationFrame() {
-  if (!renderer || !pendingFrame) return;
-  renderer.draw(pendingFrame);
-  pendingFrame = null;
+  if (!renderer || (!pendingFrames[0] && !pendingFrames[1])) return;
+  renderer.draw(pendingFrames[0], pendingFrames[1]);
+  pendingFrames = [null, null];
 }
 
-// Startup.
+// Startup
 function start() {
-  const dataUri = "http://localhost:5173/avc.mp4";
+  const dataUri1 = "http://localhost:5173/avc.mp4";
+  const dataUri2 = "http://localhost:5173/avc.mp4";
 
   // Get the renderer type from the query parameter
   const urlParams = new URLSearchParams(window.location.search);
@@ -78,37 +79,56 @@ function start() {
     return;
   }
 
-  // Set up a VideoDecoder.
-  const decoder = new VideoDecoder({
-    output(frame) {
-      // Update statistics.
-      if (startTime == null) {
-        startTime = performance.now();
-      } else {
-        const elapsed = (performance.now() - startTime) / 1000;
-        const fps = ++frameCount / elapsed;
-        setStatus("render", `${fps.toFixed(0)} fps`);
-      }
+  // Set up two VideoDecoders
+  const setupDecoder = (index: number) => {
+    return new VideoDecoder({
+      output(frame) {
+        // Update statistics.
+        if (startTime == null) {
+          startTime = performance.now();
+        } else {
+          const elapsed = (performance.now() - startTime) / 1000;
+          const fps = ++frameCount / elapsed;
+          setStatus("render", `${fps.toFixed(0)} fps`);
+        }
 
-      // Schedule the frame to be rendered.
-      renderFrame(frame);
-    },
-    error(e) {
-      console.log("ERROR: decode: ", e);
-    },
-  });
+        // Schedule the frame to be rendered.
+        renderFrame(frame, index);
+      },
+      error(e) {
+        console.log(`ERROR: decode ${index}: `, e);
+      },
+    });
+  };
 
-  // Fetch and demux the media data.
-  const demuxer = new MP4Demuxer(dataUri, {
+  const decoder1 = setupDecoder(0);
+  const decoder2 = setupDecoder(1);
+
+  // Fetch and demux the media data for both videos
+  new MP4Demuxer(dataUri1, {
     onConfig(config) {
       setStatus(
-        "decode",
+        "decode1",
         `${config.codec} @ ${config.codedWidth}x${config.codedHeight}`
       );
-      decoder.configure(config);
+      decoder1.configure(config);
     },
     onChunk(chunk) {
-      decoder.decode(chunk);
+      decoder1.decode(chunk);
+    },
+    setStatus,
+  });
+
+  new MP4Demuxer(dataUri2, {
+    onConfig(config) {
+      setStatus(
+        "decode2",
+        `${config.codec} @ ${config.codedWidth}x${config.codedHeight}`
+      );
+      decoder2.configure(config);
+    },
+    onChunk(chunk) {
+      decoder2.decode(chunk);
     },
     setStatus,
   });
