@@ -1,4 +1,5 @@
 import { FabricRenderer } from "./renderer_fabric";
+import { OptimizedFabricRenderer } from "./renderer_fabric_optimized";
 import { Canvas2DRenderer } from "./renderer_dom";
 import { MP4Demuxer } from "./mp4_demuxer";
 
@@ -33,7 +34,11 @@ function updateFPSDisplay(fpsMessage: string) {
 }
 
 // Rendering
-let renderer: FabricRenderer | Canvas2DRenderer | null = null;
+let renderer:
+  | FabricRenderer
+  | OptimizedFabricRenderer
+  | Canvas2DRenderer
+  | null = null;
 let pendingFrames: [VideoFrame | null, VideoFrame | null] = [null, null];
 let startTime: number | null = null;
 let frameCount = 0;
@@ -68,6 +73,8 @@ function start() {
   // Pick a renderer to use based on the query parameter
   if (rendererType === "fabric") {
     renderer = new FabricRenderer();
+  } else if (rendererType === "optimized") {
+    renderer = new OptimizedFabricRenderer();
   } else if (rendererType === "canvas2d") {
     const domCanvas = document.getElementById(
       "videoCanvas"
